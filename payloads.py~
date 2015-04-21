@@ -1,0 +1,21 @@
+from PyQt4 import QtCore
+
+#This file provides a list of all available payloads.
+
+#First, declare the list that will be populated with payloads.
+payloads = []
+
+#Add each payload to the list. Payload objects have the structure:
+class Payload(QtCore.QObject):
+    def __init__(self, name, mass, cost, Cd, pwrRqd):
+       self.name = name
+       self.mass = mass
+       self.cost = cost
+       self.Cd   = Cd
+       self.pwrRqd = pwrRqd
+
+rock = Payload('rock', 1.0, 0, 0.3, 0)
+payloads.append(rock)
+
+stayPutnik = Payload('stayPutnik', 10, 1.0, 0, 0)
+payloads.append(stayPutnik)
