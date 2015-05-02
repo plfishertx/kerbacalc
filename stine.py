@@ -12,7 +12,7 @@ class Part:
     name : str
        Identifying name of the part.
 
-    m : float
+    mass : float
        Mass of the part.
 
     cost : int
@@ -96,7 +96,7 @@ class Payload(Part):
         generates power). So this could be things like crew cabins, batteries,
         solar panels, etc.
         """
-        Part.__init__(self, name, mTot, cost, Cd)
+        Part.__init__(self, name, m, cost, Cd)
         self.pwrRqd = pwrRqd
 
 class Engine(Part):
@@ -151,7 +151,7 @@ class Engine(Part):
         Notes
         -----
         """
-        Part.__init__(self, name, mTot, cost, Cd)
+        Part.__init__(self, name, m, cost, Cd)
         self.Itot = Itot
         self.Isp  = Isp
         self.FvsT = FvsT
@@ -263,7 +263,7 @@ class Stage(Part):
         """
         self.m = 0
         for obj in parts:
-            self.m += obj.m
+            self.m += obj.mass
 
 class Rocket:
     """Contains stages and has methods for construction and flying.
