@@ -96,7 +96,7 @@ class Payload(Part):
         generates power). So this could be things like crew cabins, batteries,
         solar panels, etc.
         """
-        Part.__init__(name, mTot, cost, Cd)
+        Part.__init__(self, name, mTot, cost, Cd)
         self.pwrRqd = pwrRqd
 
 class Engine(Part):
@@ -151,7 +151,7 @@ class Engine(Part):
         Notes
         -----
         """
-        Part.__init__(name, mTot, cost, Cd)
+        Part.__init__(self, name, mTot, cost, Cd)
         self.Itot = Itot
         self.Isp  = Isp
         self.FvsT = FvsT
@@ -197,7 +197,7 @@ class Fueltank(Part):
         Notes
         -----
         """
-        Part.__init__(name, mTot, cost, Cd)
+        Part.__init__(self, name, mTot, cost, Cd)
         self.drymass = drymass
 
 class Decoupler(Part):
@@ -234,7 +234,7 @@ class Decoupler(Part):
         Notes
         -----
         """
-        Part.__init__(name, m, cost, Cd)
+        Part.__init__(self, name, m, cost, Cd)
       
 class Stage(Part):
     """Subclass of Part object to act as a container of other Parts.
