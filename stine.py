@@ -109,13 +109,13 @@ class Engine(Part):
     Instance Variables
     ------------------
     Itot : float
-       Total impulse available to impart.
+       Total impulse available to impart in newton-seconds.
 
     Isp : float
-       Specific impulse available to impart for this Engine.
+       Specific impulse available to impart for this Engine in seconds.
 
-    FvsT : I don't know
-       **this needs to be figured out**
+    FvsT : str
+       String specifying location of file containing thrust curve vs. time.
     """
 
     def __init__(self, name, m, cost, Cd, Itot, Isp, FvsT):
@@ -140,13 +140,13 @@ class Engine(Part):
            Drag coefficient of the Engine.
 
         Itot : float
-           Total impulse available to impart.
+           Total impulse available to impart in newton-seconds.
 
         Isp : float
-           Specific impulse available to impart for this Engine.
+           Specific impulse available to impart for this Engine in seconds.
 
-        FvsT : I don't know
-           **this needs to be figured out**
+        FvsT : str
+           String specifying location of file containing thrust curve vs. time.
 
         Notes
         -----
