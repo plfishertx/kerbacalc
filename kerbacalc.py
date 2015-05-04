@@ -52,7 +52,7 @@ class GUIForm(QtGui.QMainWindow):
 
    def updateGraph(self):
       #Launch it with initial values for pos'n, v, and acc.
-      self.rocket.launch(0,0, 10.0,10.0, 0,-9.8)
+      self.rocket.launch(0,0,0, 10.0,10.0,10.0, 0,-9.8,0)
 
       #Define params for time-diff calculation of trajectory.
       stoptime = 4.0
@@ -64,7 +64,7 @@ class GUIForm(QtGui.QMainWindow):
       print 0, tpts[0], self.rocket.y, self.rocket.vy
       for i in range( 1, len(tpts) ): 
           #Call rocket.go to advance 1 timestep.
-          self.rocket.go(self.rocket.x, self.rocket.y, dt)
+          self.rocket.go(self.rocket.x, self.rocket.y, self.rocket.z, dt)
           print i, tpts[i], self.rocket.y, self.rocket.vy   
           vArray = np.append(vArray, self.rocket.vy)
           yArray = np.append(yArray, self.rocket.y)

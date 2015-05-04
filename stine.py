@@ -1,4 +1,5 @@
 #We build rockets!
+import math
 
 class Part:
     """Superclass for any piece of a rocket.
@@ -289,11 +290,17 @@ class Rocket:
     y : float
        Current y position of the Rocket.
 
+    z : float
+       Current z position of the Rocket.
+
     vx : float
        Current x component of the Rocket's velocity.
 
     vy : float
        Current y component of the Rocket's velocity.
+
+    vz : float
+       Current z component of the Rocket's velocity.
 
     ax : float
        Current x component of the Rocket's acceleration.
@@ -301,12 +308,19 @@ class Rocket:
     ay : float
        Current y component of the Rocket's acceleration.
 
+    az : float
+       Current z component of the Rocket's acceleration.
+
     vx_avg : float
        Current average x component of the Rocket's velocity between two time
        steps.
 
     vy_avg : float
        Current average y component of the Rocket's velocity between two time
+       steps.
+
+    vz_avg : float
+       Current average z component of the Rocket's velocity between two time
        steps.
     """
 
@@ -338,7 +352,7 @@ class Rocket:
         """
         print "Ready to assemble stages!"
 
-    def launch(self, x0, y0, v0x, v0y, a0x, a0y):
+    def launch(self, x0, y0, z0, v0x, v0y, v0z, a0x, a0y, a0z):
         """Initialize the position and motion variables of the Rocket.
 
         Returns
@@ -353,11 +367,17 @@ class Rocket:
         y0 : float
            Initial y position of the Rocket.
 
+        z0 : float
+           Initial z position of the Rocket.
+
         v0x : float
            Initial x component of the Rocket's velocity.
 
         v0y : float
            Initial y component of the Rocket's velocity.
+
+        v0z : float
+           Initial z component of the Rocket's velocity.
 
         a0x : float
            Initial x component of the Rocket's acceleration.
@@ -365,17 +385,23 @@ class Rocket:
         a0y : float
            Initial y component of the Rocket's acceleration.
 
+        a0z : float
+           Initial z component of the Rocket's acceleration.
+
         Notes
         -----
         """
         self.x = x0
         self.y = y0
+        self.z = z0
         self.vx = v0x
         self.vy = v0y
+        self.vz = v0z
         self.ax = a0x
         self.ay = a0y
+        self.az = a0z
 
-    def go(self, x, y, dt):
+    def go(self, x, y, z, dt):
         """Compute rocket position and velocity after a given timestep.
 
         Returns
@@ -390,13 +416,16 @@ class Rocket:
         y : float
            Rocket y position.
 
+        z : float
+           Rocket z position.
+
         dt : float
            Time step to advance by in seconds.
 
         Notes
         -----
-        It seems like x and y keywords are not used so they can be removed. It
-        would seem an positional information would just be retrieved from the
+        It seems like x, y and z keywords are not used so they can be removed.
+        It would seem an positional information would just be retrieved from the
         Rocket object itself so there shouldn't be any need to input positions.
         nbrunett could be misinterpreting something however...
         """
@@ -404,11 +433,11 @@ class Rocket:
         #Advance 1/2 tstep to find avg v and new acc.
         self.vx_avg = self.vx + self.ax*halfdt
         self.vy_avg = self.vy + self.ay*halfdt
+        self.vz_avg = self.vz + self.az*halfdt
         #Put acc calculation here.
-        self.x  += self.vx_avg*dt
-        self.y  += self.vy_avg*dt
+        self.x += self.vx_avg*dt
+        self.y += self.vy_avg*dt
+        self.z += self.vz_avg*dt
         self.vx += self.ax*dt
         self.vy += self.ay*dt
-
-
-
+        self.vz += self.az*dt
