@@ -246,6 +246,8 @@ class Stage(Part):
 
     Instance Variables
     ------------------
+    parts : list
+       List of Part subclass objects specifying the components of the Stage.
     """
     def  __init__(self, parts):
         """Prepare all Stage instance variables.
@@ -262,6 +264,7 @@ class Stage(Part):
         Notes
         -----
         """
+        self.parts = parts
         self.m = 0.0
         for obj in parts:
             self.m += obj.mass
