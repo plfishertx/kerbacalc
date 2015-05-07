@@ -262,7 +262,7 @@ class Stage(Part):
         Notes
         -----
         """
-        self.m = 0
+        self.m = 0.0
         for obj in parts:
             self.m += obj.mass
 
@@ -343,7 +343,7 @@ class Rocket:
         """
         print "Initialized a Rocket."
         self.stages = stages
-        self.m = 0
+        self.m = 0.0
         for eachStage in stages:
             self.m += eachStage.m
 
