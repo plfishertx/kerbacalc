@@ -325,6 +325,14 @@ class Rocket:
     vz_avg : float
        Current average z component of the Rocket's velocity between two time
        steps.
+
+    head : list
+       List of floats describing the direction the rocket is pointing, in
+       radians. head[0] is the angle between the x and y coordinates with zero
+       starting on the positive x-axis and ascending through the positive
+       y-axis. head[1] is the angle between the z-axis and the x,y plane with
+       zero starting on the positive z-axis and ascending to the negative
+       z-axis.
     """
 
     def __init__(self, stages):
@@ -355,7 +363,7 @@ class Rocket:
         """
         print "Ready to assemble stages!"
 
-    def launch(self, x0, y0, z0, v0x, v0y, v0z, a0x, a0y, a0z):
+    def launch(self, x0, y0, z0, v0x, v0y, v0z, a0x, a0y, a0z, head0):
         """Initialize the position and motion variables of the Rocket.
 
         Returns
@@ -391,6 +399,9 @@ class Rocket:
         a0z : float
            Initial z component of the Rocket's acceleration.
 
+        head0 : list
+           Initial direction the Rocket is pointing, in radians.
+
         Notes
         -----
         """
@@ -403,6 +414,7 @@ class Rocket:
         self.ax = a0x
         self.ay = a0y
         self.az = a0z
+        self.head = head0
 
     def go(self, x, y, z, dt):
         """Compute rocket position and velocity after a given timestep.
@@ -432,15 +444,33 @@ class Rocket:
         Rocket object itself so there shouldn't be any need to input positions.
         nbrunett could be misinterpreting something however...
         """
+        #this only works for constant FvsT
+        totAx = 0.0
+        totAy = 0.0
+        totAz = 0.0
+        for stage in self.stages:
+            for part in stage.parts:
+                if part.__class__.__name__ == 'Engine':
+                    totAx += (part.FvsT/self.m)*\
+                             math.sin(self.head[1])*\
+                             math.cos(self.head[0])
+                    totAy += (part.FvsT/self.m)*\
+                             math.sin(self.head[1])*\
+                             math.sin(self.head[0])
+                    totAz += (part.FvsT/self.m)*math.cos(self.head[1])
+        totAx += self.ax
+        totAy += self.ay
+        totAz += self.az
+        
         halfdt = dt/2.0
         #Advance 1/2 tstep to find avg v and new acc.
-        self.vx_avg = self.vx + self.ax*halfdt
-        self.vy_avg = self.vy + self.ay*halfdt
-        self.vz_avg = self.vz + self.az*halfdt
+        self.vx_avg = self.vx + totAx*halfdt
+        self.vy_avg = self.vy + totAy*halfdt
+        self.vz_avg = self.vz + totAz*halfdt
         #Put acc calculation here.
         self.x += self.vx_avg*dt
         self.y += self.vy_avg*dt
         self.z += self.vz_avg*dt
-        self.vx += self.ax*dt
-        self.vy += self.ay*dt
-        self.vz += self.az*dt
+        self.vx += totAx*dt
+        self.vy += totAy*dt
+        self.vz += totAz*dt
