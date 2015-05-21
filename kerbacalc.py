@@ -51,8 +51,8 @@ class GUIForm(QtGui.QMainWindow):
 
 
    def updateGraph(self):
-      #Launch it with initial values for pos'n, v, and acc.
-      self.rocket.launch(0,0,0, 10.0,10.0,10.0, 0,-9.8,0, [0.0, 0.0])
+      #Launch it with initial values for pos'n, v, acc. and direction
+      self.rocket.launch(0,0,0, 10.0,10.0,10.0, 0,-9.8,0, 0.0,np.pi/2.0)
 
       #Define params for time-diff calculation of trajectory.
       stoptime = 4.0

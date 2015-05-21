@@ -326,13 +326,15 @@ class Rocket:
        Current average z component of the Rocket's velocity between two time
        steps.
 
-    head : list
-       List of floats describing the direction the rocket is pointing, in
-       radians. head[0] is the angle between the x and y coordinates with zero
-       starting on the positive x-axis and ascending through the positive
-       y-axis. head[1] is the angle between the z-axis and the x,y plane with
-       zero starting on the positive z-axis and ascending to the negative
-       z-axis.
+    head : float
+       The compass direction the Rocket is facing in radians, ranging from 0 to
+       2*pi running clockwise. 0 is facing true north (positive x direction) and
+       pi/2 is facing east (positive y direction).
+
+    pitch : float
+       The orientation of the rocket relative to horizontal in radians, ranging
+       from pi/2 (up; positive z direction) to -pi/2 (down; negative z
+       direction).
     """
 
     def __init__(self, stages):
@@ -363,7 +365,7 @@ class Rocket:
         """
         print "Ready to assemble stages!"
 
-    def launch(self, x0, y0, z0, v0x, v0y, v0z, a0x, a0y, a0z, head0):
+    def launch(self, x0, y0, z0, v0x, v0y, v0z, a0x, a0y, a0z, head0, pitch0):
         """Initialize the position and motion variables of the Rocket.
 
         Returns
@@ -399,8 +401,12 @@ class Rocket:
         a0z : float
            Initial z component of the Rocket's acceleration.
 
-        head0 : list
-           Initial direction the Rocket is pointing, in radians.
+        head0 : float
+           Initial compass direction the Rocket is pointing, in radians.
+
+        pitch0 : float
+           Initial direction the Rocket is pointing relative to horizontal, in
+           radians.
 
         Notes
         -----
@@ -415,6 +421,7 @@ class Rocket:
         self.ay = a0y
         self.az = a0z
         self.head = head0
+        self.pitch = pitch0
 
     def go(self, x, y, z, dt):
         """Compute rocket position and velocity after a given timestep.
@@ -452,12 +459,13 @@ class Rocket:
             for part in stage.parts:
                 if part.__class__.__name__ == 'Engine':
                     totAx += (part.FvsT/self.m)*\
-                             math.sin(self.head[1])*\
-                             math.cos(self.head[0])
+                             math.sin(abs(self.pitch-(math.pi/2.0)))*\
+                             math.cos(self.head)
                     totAy += (part.FvsT/self.m)*\
-                             math.sin(self.head[1])*\
-                             math.sin(self.head[0])
-                    totAz += (part.FvsT/self.m)*math.cos(self.head[1])
+                             math.sin(abs(self.pitch-(math.pi/2.0)))*\
+                             math.sin(self.head)
+                    totAz += (part.FvsT/self.m)*\
+                             math.cos(abs(self.pitch-(math.pi/2.0)))
         totAx += self.ax
         totAy += self.ay
         totAz += self.az
