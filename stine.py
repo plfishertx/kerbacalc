@@ -115,8 +115,15 @@ class Engine(Part):
     Isp : float
        Specific impulse available to impart for this Engine in seconds.
 
-    FvsT : str
-       String specifying location of file containing thrust curve vs. time.
+    FvsT : function
+       Function which returns the force exerted by the Engine (in Newtons) when
+       a time (in seconds) after Engine ignition is passed into it. The time
+       argument must accept only a float and the return value must be a float.
+
+    delT : float
+       Time (in seconds) since Engine first started being used by the Rocket.go
+       method. Think of it as the time since the Engine was ignited (really only
+       applies to the solid booster philosophy right now).
     """
 
     def __init__(self, name, m, cost, Cd, Itot, Isp, FvsT):
@@ -146,8 +153,11 @@ class Engine(Part):
         Isp : float
            Specific impulse available to impart for this Engine in seconds.
 
-        FvsT : str
-           String specifying location of file containing thrust curve vs. time.
+        FvsT : function
+           Function which returns the force exerted by the Engine (in Newtons)
+           when a time (in seconds) after Engine ignition is passed into it. The
+           time argument must accept only a float and the return value must be a
+           float.
 
         Notes
         -----
@@ -156,6 +166,7 @@ class Engine(Part):
         self.Itot = Itot
         self.Isp  = Isp
         self.FvsT = FvsT
+        self.delT = 0.0
 
 class Fueltank(Part):
     """Subclass of Part object distinguished by the addition of dry mass value.
@@ -451,21 +462,22 @@ class Rocket:
         Rocket object itself so there shouldn't be any need to input positions.
         nbrunett could be misinterpreting something however...
         """
-        #this only works for constant FvsT
+        #add acc. due to Engine thrust
         totAx = 0.0
         totAy = 0.0
         totAz = 0.0
         for stage in self.stages:
             for part in stage.parts:
                 if part.__class__.__name__ == 'Engine':
-                    totAx += (part.FvsT/self.m)*\
+                    totAx += (part.FvsT(part.delT)/self.m)*\
                              math.sin(abs(self.pitch-(math.pi/2.0)))*\
                              math.cos(self.head)
-                    totAy += (part.FvsT/self.m)*\
+                    totAy += (part.FvsT(part.delT)/self.m)*\
                              math.sin(abs(self.pitch-(math.pi/2.0)))*\
                              math.sin(self.head)
-                    totAz += (part.FvsT/self.m)*\
+                    totAz += (part.FvsT(part.delT)/self.m)*\
                              math.cos(abs(self.pitch-(math.pi/2.0)))
+        #add acc. initialized to Rocket (e.g. gravity)
         totAx += self.ax
         totAy += self.ay
         totAz += self.az
@@ -475,10 +487,16 @@ class Rocket:
         self.vx_avg = self.vx + totAx*halfdt
         self.vy_avg = self.vy + totAy*halfdt
         self.vz_avg = self.vz + totAz*halfdt
-        #Put acc calculation here.
+        #Put acc. calculation here
         self.x += self.vx_avg*dt
         self.y += self.vy_avg*dt
         self.z += self.vz_avg*dt
         self.vx += totAx*dt
         self.vy += totAy*dt
         self.vz += totAz*dt
+
+        #increment Engine burn times
+        for stage in self.stages:
+            for part in stage.parts:
+                if part.__class__.__name__ == 'Engine':
+                    part.delT += dt
