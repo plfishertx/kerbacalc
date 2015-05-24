@@ -413,11 +413,12 @@ class Rocket:
            Initial z component of the Rocket's acceleration.
 
         head0 : float
-           Initial compass direction the Rocket is pointing, in radians.
+           Initial compass direction the Rocket is pointing, in radians. Must be
+           between 0 and 2*pi.
 
         pitch0 : float
            Initial direction the Rocket is pointing relative to horizontal, in
-           radians.
+           radians. Must be between -pi/2 and pi/2.
 
         Notes
         -----
@@ -431,8 +432,14 @@ class Rocket:
         self.ax = a0x
         self.ay = a0y
         self.az = a0z
-        self.head = head0
-        self.pitch = pitch0
+        if head0 >= 0.0 and head0 <= 2.0*math.pi:
+            self.head = head0
+        else:
+            raise ValueError('head0 must be between 0 and 2*pi')
+        if pitch0 >= -math.pi/2.0 and pitch <= math.pi/2.0:
+            self.pitch = pitch0
+        else:
+            raise ValueError('pitch0 must be between -pi/2 and pi/2')
 
     def go(self, x, y, z, dt):
         """Compute rocket position and velocity after a given timestep.
