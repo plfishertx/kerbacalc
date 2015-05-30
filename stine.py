@@ -436,7 +436,7 @@ class Rocket:
             self.head = head0
         else:
             raise ValueError('head0 must be between 0 and 2*pi')
-        if pitch0 >= -math.pi/2.0 and pitch <= math.pi/2.0:
+        if pitch0 >= -math.pi/2.0 and pitch0 <= math.pi/2.0:
             self.pitch = pitch0
         else:
             raise ValueError('pitch0 must be between -pi/2 and pi/2')
@@ -507,3 +507,65 @@ class Rocket:
             for part in stage.parts:
                 if part.__class__.__name__ == 'Engine':
                     part.delT += dt
+
+    def steer(self, dhead, dpitch):
+        """Simply change the Rocket heading and/or pitch.
+
+        Returns
+        -------
+        None
+
+        Parameters
+        ----------
+        dhead : float
+           Change in the cardinal direction of the Rocket, in radians.
+
+        dpitch : float
+           Change in the direction relative to horizontal of the Rocket, in
+           radians.
+
+        Notes
+        -----
+        nbrunett's idea is to use this method between Rocket.go calls when we
+        want to change the direction of the Rocket. Simply add dhead and dpitch
+        to Rocket.head and Rocket.pitch respectively. Make sure that the angles
+        are within their accepted ranges. Just a place holding method to get the
+        idea of steering into the Rocket class.
+        """
+        #add the change in pitch and determine if it necessitates changing head
+        #convert pitch to 0 to 2pi interval
+        if self.pitch < 0.0:
+            stdPitch = 2.0*math.pi + self.pitch
+        #find pitch quadrant before and after adding dpitch
+        headFlip = False
+        oldPQuad = int(stdPitch/(math.pi/2.0)) + 1
+        stdPitch += dpitch
+        #put stdPitch back on 0 to 2pi interval
+        if stdPitch < 0.0:
+            stdPitch = 2.0*math.pi + math.fmod(stdPitch, 2.0*math.pi)
+        if stdPitch >= 2.0*math.pi:
+            stdPitch = math.fmod(stdPitch, 2.0*math.pi)
+        newPQuad = int(stdPitch/(math.pi/2.0)) + 1
+        if (oldPQuad == 1 and newPQuad == 2) or \
+           (oldPQuad == 4 and newPQuad == 3) or \
+           (oldPQuad == 2 and newPQuad == 1) or \
+           (oldPQuad == 3 and newPQuad == 4):
+            headFlip = True
+        #convert altered pitch back to KSP convention
+        if newPQuad == 1:
+            self.pitch = stdPitch
+        elif newPQuad == 2 or  newPQuad == 3:
+            self.pitch = math.pi - stdPitch
+        elif newPQuad == 4:
+            self.pitch = stdPitch - 2.0*math.pi
+
+        #add the change in head and potentially a flip of direction from pitch
+        if headFlip:
+            self.head += dhead + math.pi
+        else:
+            self.head += dhead
+        #make sure it is still on 0 to 2pi interval
+        if self.head < 0.0:
+            self.head = 2.0*math.pi + self.head
+        elif self.head >= 2.0*math.pi:
+            self.head = math.fmod(self.head, 2.0*math.pi)
