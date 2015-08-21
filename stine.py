@@ -150,8 +150,15 @@ class Engine(Part):
     Isp : float
        Specific impulse available to impart for this Engine in seconds.
 
-    FvsT : str
-       String specifying location of file containing thrust curve vs. time.
+    FvsT : function
+       Function which returns the force exerted by the Engine (in Newtons) when
+       a time (in seconds) after Engine ignition is passed into it. The time
+       argument must accept only a float and the return value must be a float.
+
+    delT : float
+       Time (in seconds) since Engine first started being used by the Rocket.go
+       method. Think of it as the time since the Engine was ignited (really only
+       applies to the solid booster philosophy right now).
     """
 
     def __init__(self, name, m, cost, Cd, Itot, Isp, FvsT):
@@ -181,8 +188,11 @@ class Engine(Part):
         Isp : float
            Specific impulse available to impart for this Engine in seconds.
 
-        FvsT : str
-           String specifying location of file containing thrust curve vs. time.
+        FvsT : function
+           Function which returns the force exerted by the Engine (in Newtons)
+           when a time (in seconds) after Engine ignition is passed into it. The
+           time argument must accept only a float and the return value must be a
+           float.
 
         Notes
         -----
@@ -215,6 +225,7 @@ class Engine(Part):
         self.Itot = Itot
         self.Isp  = Isp
         self.FvsT = FvsT
+        self.delT = 0.0
 
 class Fueltank(Part):
     """Subclass of Part object distinguished by the addition of dry mass value.
@@ -396,6 +407,16 @@ class Rocket:
     vz_avg : float
        Current average z component of the Rocket's velocity between two time
        steps.
+
+    head : float
+       The compass direction the Rocket is facing in radians, ranging from 0 to
+       2*pi running clockwise. 0 is facing true north (positive x direction) and
+       pi/2 is facing east (positive y direction).
+
+    pitch : float
+       The orientation of the rocket relative to horizontal in radians, ranging
+       from pi/2 (up; positive z direction) to -pi/2 (down; negative z
+       direction).
     """
 
     def __init__(self, stages):
@@ -431,7 +452,7 @@ class Rocket:
         """
         print "Ready to assemble stages!"
 
-    def launch(self, x0, y0, z0, v0x, v0y, v0z, a0x, a0y, a0z):
+    def launch(self, x0, y0, z0, v0x, v0y, v0z, a0x, a0y, a0z, head0, pitch0):
         """Initialize the position and motion variables of the Rocket.
 
         Returns
@@ -467,19 +488,32 @@ class Rocket:
         a0z : float
            Initial z component of the Rocket's acceleration.
 
+        head0 : float
+           Initial compass direction the Rocket is pointing, in radians. Must be
+           between 0 and 2*pi.
+
+        pitch0 : float
+           Initial direction the Rocket is pointing relative to horizontal, in
+           radians. Must be between -pi/2 and pi/2.
+
         Notes
         -----
         """
-        #check input types
+        #check input types and values
         inps = {'x0': x0, 'y0': y0, 'z0': z0, \
                 'v0x': v0x, 'v0y': v0y, 'v0z': v0z, \
-                'a0x': a0x, 'a0y': a0y, 'a0z': a0z}
+                'a0x': a0x, 'a0y': a0y, 'a0z': a0z, \
+                'head0': head0, 'pitch0': pitch0}
         for inp in inps:
             if type(inps[inp]) != float:
                 if type(inps[inp]) == int:
                     inps[inp] = float(inps[inp])
                 else:
                     raise TypeError(inp + ' must be a float.')
+        if not (head0 >= 0.0 and head0 <= 2.0*math.pi):
+            raise ValueError('head0 must be between 0 and 2*pi')
+        if not (pitch0 >= -math.pi/2.0 and pitch0 <= math.pi/2.0):
+            raise ValueError('pitch0 must be between -pi/2 and pi/2')
 
         #initialize attributes
         self.x = inps['x0']
@@ -491,6 +525,8 @@ class Rocket:
         self.ax = inps['a0x']
         self.ay = inps['a0y']
         self.az = inps['a0z']
+        self.head = inps['head0']
+        self.pitch = inps['pitch0']
 
     def go(self, x, y, z, dt):
         """Compute rocket position and velocity after a given timestep.
@@ -520,6 +556,7 @@ class Rocket:
         Rocket object itself so there shouldn't be any need to input positions.
         nbrunett could be misinterpreting something however...
         """
+        #check input type and value
         if type(dt) != float:
             if type(dt) == int:
                 dt = float(dt)
@@ -527,15 +564,104 @@ class Rocket:
                 raise TypeError('dt must be a float.')
         if dt == 0.0:
             raise ValueError('dt cannot be 0.0.')
+        
+        #add acc. due to Engine thrust
+        totAx = 0.0
+        totAy = 0.0
+        totAz = 0.0
+        for stage in self.stages:
+            for part in stage.parts:
+                if part.__class__.__name__ == 'Engine':
+                    totAx += (part.FvsT(part.delT)/self.m)*\
+                             math.sin(abs(self.pitch-(math.pi/2.0)))*\
+                             math.cos(self.head)
+                    totAy += (part.FvsT(part.delT)/self.m)*\
+                             math.sin(abs(self.pitch-(math.pi/2.0)))*\
+                             math.sin(self.head)
+                    totAz += (part.FvsT(part.delT)/self.m)*\
+                             math.cos(abs(self.pitch-(math.pi/2.0)))
+        #add acc. initialized to Rocket (e.g. gravity)
+        totAx += self.ax
+        totAy += self.ay
+        totAz += self.az
+
         halfdt = dt/2.0
         #Advance 1/2 tstep to find avg v and new acc.
-        self.vx_avg = self.vx + self.ax*halfdt
-        self.vy_avg = self.vy + self.ay*halfdt
-        self.vz_avg = self.vz + self.az*halfdt
-        #Put acc calculation here.
+        self.vx_avg = self.vx + totAx*halfdt
+        self.vy_avg = self.vy + totAy*halfdt
+        self.vz_avg = self.vz + totAz*halfdt
+        #Put acc. calculation here
         self.x += self.vx_avg*dt
         self.y += self.vy_avg*dt
         self.z += self.vz_avg*dt
-        self.vx += self.ax*dt
-        self.vy += self.ay*dt
-        self.vz += self.az*dt
+        self.vx += totAx*dt
+        self.vy += totAy*dt
+        self.vz += totAz*dt
+
+        #increment Engine burn times
+        for stage in self.stages:
+            for part in stage.parts:
+                if part.__class__.__name__ == 'Engine':
+                    part.delT += dt
+
+    def steer(self, dhead, dpitch):
+        """Simply change the Rocket heading and/or pitch.
+
+        Returns
+        -------
+        None
+
+        Parameters
+        ----------
+        dhead : float
+           Change in the cardinal direction of the Rocket, in radians.
+
+        dpitch : float
+           Change in the direction relative to horizontal of the Rocket, in
+           radians.
+
+        Notes
+        -----
+        nbrunett's idea is to use this method between Rocket.go calls when we
+        want to change the direction of the Rocket. Simply add dhead and dpitch
+        to Rocket.head and Rocket.pitch respectively. Make sure that the angles
+        are within their accepted ranges. Just a place holding method to get the
+        idea of steering into the Rocket class.
+        """
+        #add the change in pitch and determine if it necessitates changing head
+        #convert pitch to 0 to 2pi interval
+        if self.pitch < 0.0:
+            stdPitch = 2.0*math.pi + self.pitch
+        #find pitch quadrant before and after adding dpitch
+        headFlip = False
+        oldPQuad = int(stdPitch/(math.pi/2.0)) + 1
+        stdPitch += dpitch
+        #put stdPitch back on 0 to 2pi interval
+        if stdPitch < 0.0:
+            stdPitch = 2.0*math.pi + math.fmod(stdPitch, 2.0*math.pi)
+        if stdPitch >= 2.0*math.pi:
+            stdPitch = math.fmod(stdPitch, 2.0*math.pi)
+        newPQuad = int(stdPitch/(math.pi/2.0)) + 1
+        if (oldPQuad == 1 and newPQuad == 2) or \
+           (oldPQuad == 4 and newPQuad == 3) or \
+           (oldPQuad == 2 and newPQuad == 1) or \
+           (oldPQuad == 3 and newPQuad == 4):
+            headFlip = True
+        #convert altered pitch back to KSP convention
+        if newPQuad == 1:
+            self.pitch = stdPitch
+        elif newPQuad == 2 or  newPQuad == 3:
+            self.pitch = math.pi - stdPitch
+        elif newPQuad == 4:
+            self.pitch = stdPitch - 2.0*math.pi
+
+        #add the change in head and potentially a flip of direction from pitch
+        if headFlip:
+            self.head += dhead + math.pi
+        else:
+            self.head += dhead
+        #make sure it is still on 0 to 2pi interval
+        if self.head < 0.0:
+            self.head = 2.0*math.pi + self.head
+        elif self.head >= 2.0*math.pi:
+            self.head = math.fmod(self.head, 2.0*math.pi)
