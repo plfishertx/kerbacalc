@@ -526,7 +526,7 @@ class Rocket:
         self.head = inps['head0']
         self.pitch = inps['pitch0']
 
-    def go(self, x, y, z, dt):
+    def go(self, dt):
         """Compute rocket position and velocity after a given timestep.
 
         Returns
@@ -535,25 +535,10 @@ class Rocket:
 
         Parameters
         ----------
-        x : float
-           Rocket x position.
-
-        y : float
-           Rocket y position.
-
-        z : float
-           Rocket z position.
-
         dt : float
            Time step to advance by in seconds.
-
-        Notes
-        -----
-        It seems like x, y and z keywords are not used so they can be removed.
-        It would seem an positional information would just be retrieved from the
-        Rocket object itself so there shouldn't be any need to input positions.
-        nbrunett could be misinterpreting something however...
         """
+
         #check input type and value
         if type(dt) != float:
             if type(dt) == int:

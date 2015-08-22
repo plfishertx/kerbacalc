@@ -64,7 +64,7 @@ class GUIForm(QtGui.QMainWindow):
       print 0, tpts[0], self.rocket.y, self.rocket.vy
       for i in range( 1, len(tpts) ): 
           #Call rocket.go to advance 1 timestep.
-          self.rocket.go(self.rocket.x, self.rocket.y, self.rocket.z, dt)
+          self.rocket.go(dt)
           print i, tpts[i], self.rocket.y, self.rocket.vy   
           vArray = np.append(vArray, self.rocket.vy)
           yArray = np.append(yArray, self.rocket.y)
