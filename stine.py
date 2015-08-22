@@ -628,6 +628,18 @@ class Rocket:
         are within their accepted ranges. Just a place holding method to get the
         idea of steering into the Rocket class.
         """
+        #check input types
+        if type(dhead) != float:
+            if type(dhead) == int:
+                dhead = float(dhead)
+            else:
+                raise TypeError('dhead must be a float.')
+        if type(dpitch) != float:
+            if type(pitch) == int:
+                dpitch = float(dpitch)
+            else:
+                raise TypeError('dpitch must be a float.')
+
         #add the change in pitch and determine if it necessitates changing head
         #convert pitch to 0 to 2pi interval
         if self.pitch < 0.0:
