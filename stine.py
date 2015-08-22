@@ -210,16 +210,14 @@ class Engine(Part):
                 Isp = float(Isp)
             else:
                 raise TypeError('Isp must be a float.')
-        if type(FvsT) != str:
-            raise TypeError('FvsT must be a string.')
+        if not hasattr(FvsT, '__call__'):
+            raise TypeError('FvsT must be a function.')
 
         #check input values
         if Itot < 0.0:
             raise ValueError('Itot must be greater than zero.')
         if Isp < 0.0:
             raise ValueError('Isp must be greater than zero.')
-        if FvsT == '':
-            raise ValueError('FvsT cannot be an empty string.')
 
         #initialize attributes
         self.Itot = Itot
